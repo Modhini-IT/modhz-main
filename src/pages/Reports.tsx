@@ -1,239 +1,122 @@
+import { useCallback } from "react";
+import jsPDF from "jspdf";
+
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  FileText,
-  Download,
-  Calendar,
-  Mail,
-  AlertTriangle,
-  CheckCircle,
-} from "lucide-react";
+import { Download } from "lucide-react";
 
-const reports = [
-  {
-    id: 1,
-    title: "Weekly Attendance Report",
-    date: "2026-01-27",
-    type: "attendance",
-    status: "ready",
-    emails: 3,
-  },
-  {
-    id: 2,
-    title: "Absentee Notification - IT22201",
-    date: "2026-01-27",
-    type: "absentee",
-    status: "sent",
-    emails: 5,
-  },
-  {
-    id: 3,
-    title: "Low Attendance Alert",
-    date: "2026-01-26",
-    type: "alert",
-    status: "sent",
-    emails: 3,
-  },
-  {
-    id: 4,
-    title: "Daily Summary - Monday",
-    date: "2026-01-27",
-    type: "summary",
-    status: "ready",
-    emails: 0,
-  },
-  {
-    id: 5,
-    title: "Absentee Notification - MA22251",
-    date: "2026-01-26",
-    type: "absentee",
-    status: "sent",
-    emails: 8,
-  },
+/* ================= FAKE STUDENT DATA ================= */
+
+const STUDENTS = [
+  { roll: "2025IT0123", name: "KISHORE P" },
+  { roll: "2025IT1063", name: "KISHORE T" },
+  { roll: "2025IT1022", name: "KRITHIKA S" },
+  { roll: "2025IT0420", name: "LITHIKA P" },
+  { roll: "2025IT0500", name: "MADHUMITHA A" },
+  { roll: "2025IT0316", name: "MITHRA M S" },
+  { roll: "2025IT0366", name: "MOHAMMED ASLAM A" },
+  { roll: "2025IT0511", name: "MOTHEESH D" },
+  { roll: "2025IT0171", name: "NIGILA FATHIMA L" },
+  { roll: "2025IT0098", name: "NISHANTH JACOB E" },
+  { roll: "2025IT1087", name: "POOJA SRI M" },
+  { roll: "2025IT1070", name: "PRANAV A" },
+  { roll: "2025IT1093", name: "PREMNATH R" },
 ];
 
-const absenteeHistory = [
-  {
-    date: "2026-01-27",
-    subject: "IT22201",
-    time: "08:30 - 09:20",
-    absentees: ["Kumar S", "Arun K", "Deepa R"],
-    emailSent: true,
-  },
-  {
-    date: "2026-01-27",
-    subject: "MA22251",
-    time: "09:20 - 10:10",
-    absentees: ["Arun K", "Priya N"],
-    emailSent: true,
-  },
-  {
-    date: "2026-01-26",
-    subject: "HS22252",
-    time: "08:30 - 09:20",
-    absentees: ["Kumar S", "Arun K", "Deepa R", "Vijay M"],
-    emailSent: true,
-  },
-];
+/* ================= HELPERS ================= */
+
+function getRandomAbsentees(count: number) {
+  return [...STUDENTS].sort(() => Math.random() - 0.5).slice(0, count);
+}
+
+/* ================= PDF GENERATOR (WORKING) ================= */
+
+function generateAbsenteePDF() {
+  const doc = new jsPDF(); // DO NOT set custom font
+
+  const absentees = getRandomAbsentees(
+    Math.floor(Math.random() * 5) + 4
+  );
+
+  // Header
+  doc.setFontSize(16);
+  doc.text("ABSENTEE LIST", 14, 20);
+
+  doc.setFontSize(11);
+  doc.text("Subject : IT22201", 14, 30);
+  doc.text("Date    : 27-01-2026", 14, 36);
+
+  // Table header
+  let y = 50;
+  doc.setFontSize(12);
+  doc.text("S.No", 14, y);
+  doc.text("Roll Number", 30, y);
+  doc.text("Student Name", 80, y);
+
+  y += 4;
+  doc.line(14, y, 195, y);
+  y += 8;
+
+  // Table rows
+  doc.setFontSize(10);
+  absentees.forEach((s, i) => {
+    doc.text(String(i + 1), 14, y);
+    doc.text(s.roll, 30, y);
+    doc.text(s.name, 80, y);
+    y += 7;
+
+    // Page break safety
+    if (y > 280) {
+      doc.addPage();
+      y = 20;
+    }
+  });
+
+  // Footer
+  y += 10;
+  doc.setFontSize(10);
+  doc.text(
+    "This is a system-generated absentee report.",
+    14,
+    y
+  );
+
+  doc.save("absentees_IT22201.pdf");
+}
+
+/* ================= PAGE ================= */
 
 export default function Reports() {
+  const onDownload = useCallback(() => {
+    generateAbsenteePDF();
+  }, []);
+
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6 animate-fade-in">
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Reports & Notifications</h1>
-            <p className="text-muted-foreground mt-1">
-              View attendance reports and email notification history
+      <div className="p-6 space-y-6">
+
+        <h1 className="text-2xl font-bold">
+          Reports & Notifications
+        </h1>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Absentee Report</CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Generate a sample absentee list as a PDF.
             </p>
-          </div>
-          <Button className="gap-2 bg-primary hover:bg-primary/90">
-            <FileText className="h-4 w-4" />
-            Generate Report
-          </Button>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Generated Reports */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                Generated Reports
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {reports.map((report) => (
-                  <div
-                    key={report.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${
-                        report.type === "alert"
-                          ? "bg-amber-500/10"
-                          : report.type === "absentee"
-                          ? "bg-destructive/10"
-                          : "bg-primary/10"
-                      }`}>
-                        {report.type === "alert" ? (
-                          <AlertTriangle className="h-5 w-5 text-amber-400" />
-                        ) : report.type === "absentee" ? (
-                          <Mail className="h-5 w-5 text-destructive" />
-                        ) : (
-                          <FileText className="h-5 w-5 text-primary" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">{report.title}</p>
-                        <p className="text-sm text-muted-foreground flex items-center gap-2">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(report.date).toLocaleDateString()}
-                          {report.emails > 0 && (
-                            <span className="flex items-center gap-1">
-                              <Mail className="h-3 w-3" />
-                              {report.emails} sent
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        className={
-                          report.status === "sent"
-                            ? "status-active"
-                            : "bg-primary/20 text-primary border border-primary/30"
-                        }
-                      >
-                        {report.status === "sent" ? (
-                          <span className="flex items-center gap-1">
-                            <CheckCircle className="h-3 w-3" />
-                            Sent
-                          </span>
-                        ) : (
-                          "Ready"
-                        )}
-                      </Badge>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Absentee Email History */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5 text-primary" />
-                Absentee Email History
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {absenteeHistory.map((record, idx) => (
-                  <div
-                    key={idx}
-                    className="p-4 rounded-lg bg-secondary/30 space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-mono text-primary font-medium">{record.subject}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(record.date).toLocaleDateString()} • {record.time}
-                        </p>
-                      </div>
-                      <Badge className="status-active">
-                        <Mail className="h-3 w-3 mr-1" />
-                        Email Sent
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-2">Absentees ({record.absentees.length}):</p>
-                      <div className="flex flex-wrap gap-2">
-                        {record.absentees.map((name) => (
-                          <Badge key={name} variant="secondary" className="text-xs">
-                            {name}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-4 p-3 bg-secondary/20 rounded-lg">
-                <strong>Note:</strong> Emails are automatically sent to pilotpranav2007@gmail.com 
-                after each class ends with the list of absent students.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Email Configuration Notice */}
-        <Card className="bg-card border-border border-l-4 border-l-primary">
-          <CardContent className="py-4">
-            <div className="flex items-start gap-4">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Mail className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground">Email Automation Active</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Absentee notifications are automatically sent after each class period ends. 
-                  The system uses the configured SMTP credentials to send emails securely.
-                </p>
-              </div>
-            </div>
+            <Button onClick={onDownload} className="gap-2">
+              <Download className="h-4 w-4" />
+              Download Absentees PDF
+            </Button>
           </CardContent>
         </Card>
+
       </div>
     </DashboardLayout>
   );

@@ -63,7 +63,7 @@ function generateAbsenteePDF() {
     doc.text(s.name, 80, y);
     y += 7;
 
-    if (y > 280) {
+    if (y > 280) {  
       doc.addPage();
       y = 20;
     }

@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  face-recognition-backend:
+    build: .
+    ports:
+      - "5001:5001"
+    environment:
+      - DEBUG=true
+      - DATABASE_URL=sqlite+aiosqlite:///./face_recognition.db
+      - SECRET_KEY=development-secret-key
+      - ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:5173","http://127.0.0.1:3000","http://127.0.0.1:5173"]
+    volumes:
+      - ./datasets:/app/datasets
+      - ./uploads:/app/uploads
+      - ./face_recognition.db:/app/face_recognition.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5001/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: PostgreSQL database for production
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: face_recognition
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    profiles:
+      - production
+
+volumes:
+  postgres_data:

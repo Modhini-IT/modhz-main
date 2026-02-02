@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "app/main.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "app/main.py"
+    }
+  ],
+  "env": {
+    "DEBUG": "false",
+    "DATABASE_URL": "sqlite+aiosqlite:///./face_recognition.db",
+    "SECRET_KEY": "@secret_key",
+    "ALLOWED_ORIGINS": "[\"https://your-frontend-domain.vercel.app\"]",
+    "FACE_RECOGNITION_THRESHOLD": "0.6",
+    "LOG_LEVEL": "INFO"
+  },
+  "functions": {
+    "app/main.py": {
+      "runtime": "python3.9",
+      "memory": 1024
+    }
+  }
+}
